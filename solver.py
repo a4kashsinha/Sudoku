@@ -1,6 +1,6 @@
+#solver.py
 import pprint
 
-#solver.py
 def solve(board):
     """
     Solves a sudoku board with backtracking algorithm
