@@ -42,6 +42,7 @@ class Grid:
                 self.cubes[row][col].set(0)
                 self.cubes[row][col].set_temp(0)
                 self.update_model()
+                return False
             
     def sketch(self, val):
         row, col = self.selected
@@ -116,14 +117,13 @@ class Grid:
         return False
     
     def solve_gui(self):
-        self.update_model()
         find = find_empty(self.model)
         if not find:
             return True
         else:
             row, col = find
 
-        for i in range (1, 10):
+        for i in range(1, 10):
             if valid(self.model, i, (row, col)):
                 self.model[row][col] = i
                 self.cubes[row][col].set(i)
@@ -131,8 +131,17 @@ class Grid:
                 pygame.display.update()
                 pygame.time.delay(100)
 
+                if self.solve_gui():  # Recursively solve the next cell
+                    return True
+
+                # If we can't solve the puzzle with the current number, reset it
+                self.model[row][col] = 0
+                self.cubes[row][col].set(0)
+                self.cubes[row][col].draw_change(self.win, False)
+                pygame.display.update()
+                pygame.time.delay(100)
+
         return False
-    
 
 class Cube:
     rows = 9
@@ -197,7 +206,7 @@ def find_empty(board):
 def valid(board, num, pos):
     # Check row
     for i in range(len(board[0])):
-        if board[pos[0]][i] == num and pos != i:
+        if board[pos[0]][i] == num and pos[1] != i:
             return False
         
     # Check column
@@ -297,17 +306,18 @@ def main():
                     board.solve_gui()
 
                 if event.key == pygame.K_RETURN:
-                    i, j = board.selected
-                    if board.cubes[i][j].temp != 0:
-                        if board.place(board.cubes[i][j].temp):
-                            print("Success")
-                        else:
-                            print("Wrong")
-                            strikes += 1
-                        key = None
+                    if board.selected is not None:
+                        i, j = board.selected
+                        if board.cubes[i][j].temp != 0:
+                            if board.place(board.cubes[i][j].temp):
+                                print("Success")
+                            else:
+                                print("Wrong")
+                                strikes += 1
+                            key = None
 
-                        if board.is_finished():
-                            print("Game over")
+                            if board.is_finished():
+                                print("Game over")
                         
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
